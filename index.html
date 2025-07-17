@@ -116,26 +116,7 @@
     <div id="koordinat"></div>
     <div id="kiblat"></div>
     <div id="map" style="width:100%;height:350px;max-width:400px;margin:24px auto 0 auto;display:none;border-radius:16px;overflow:hidden;"></div>
-    <div id="kompas-container" style="display:none;">
-      <svg id="kompas" width="200" height="200">
-        <circle cx="100" cy="100" r="90" stroke="#388e3c" stroke-width="4" fill="#fffde7" />
-        <text x="100" y="30" text-anchor="middle" font-size="18" fill="#388e3c">N</text>
-        <text x="100" y="190" text-anchor="middle" font-size="18" fill="#388e3c">S</text>
-        <text x="170" y="110" text-anchor="middle" font-size="18" fill="#388e3c">E</text>
-        <text x="30" y="110" text-anchor="middle" font-size="18" fill="#388e3c">W</text>
-        <g id="arrow-group-kiblat">
-          <polygon id="arrow-kiblat" points="100,40 110,100 100,90 90,100" fill="#d4af37" />
-        </g>
-        <g id="arrow-group-user">
-          <polygon id="arrow-user" points="100,40 105,100 100,90 95,100" fill="#d32f2f" opacity="0.8" />
-        </g>
-      </svg>
-    </div>
-    <div id="kompas-instruksi" style="display:none; color:#388e3c; font-weight:600; margin-top:10px;">Putar HP Anda hingga kedua jarum bertumpuk untuk menghadap kiblat.</div>
-    <button id="btn-kompas-izin" style="display:none; margin-top:12px; padding:10px 24px; font-size:1rem; background:#d4af37; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Aktifkan Kompas</button>
-    <div id="kompas-status" style="margin-top:8px; color:#888; font-size:0.98rem;"></div>
-    <button id="btn-kalibrasi" style="display:block; margin:18px auto 0 auto; padding:10px 24px; font-size:1rem; background:#388e3c; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Kalibrasi Kompas</button>
-    <div id="kalibrasi-instruksi" style="display:none; color:#d32f2f; font-weight:600; margin-top:12px; max-width:350px; margin-left:auto; margin-right:auto;">Untuk kalibrasi kompas, gerakkan HP Anda membentuk angka 8 di udara beberapa kali. Jauhkan dari benda logam/elektronik besar.</div>
+    <!-- Kompas mini dan tombol kalibrasi dihapus sesuai permintaan -->
     <div id="status-izin-lokasi" style="margin-bottom:10px; font-size:1.05rem;"></div>
     <div id="status-izin-kompas" style="margin-bottom:10px; font-size:1.05rem;"></div>
   </div>
@@ -144,6 +125,10 @@
     let userMarker = null;
     let userArrowRotation = 0;
     let mapInstance = null;
+    // Aktifkan kompas otomatis saat halaman dimuat
+    document.addEventListener('DOMContentLoaded', function() {
+      enableUserCompass();
+    });
     function getLocation() {
       document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#888;">⏳ Meminta izin lokasi...</span>';
       document.getElementById("loading").style.display = "block";
@@ -250,6 +235,8 @@
       btnIzin.style.display = "none";
       document.getElementById("kompas-status").innerText = "";
       document.getElementById("status-izin-kompas").innerHTML = '';
+      // Tampilkan kompas-container saat kompas aktif/izin diminta
+      document.getElementById("kompas-container").style.display = "block";
       if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
         // iOS/Safari butuh izin eksplisit
         btnIzin.style.display = "inline-block";
@@ -296,7 +283,8 @@
 
     function rotateUserArrow(deg) {
       const arrowGroupUser = document.getElementById("arrow-group-user");
-      arrowGroupUser.setAttribute("transform", `rotate(${-deg}, 100, 100)`);
+      // Rotasi searah jarum jam (clockwise)
+      arrowGroupUser.setAttribute("transform", `rotate(${deg}, 100, 100)`);
     }
 
     function showError(error) {
@@ -348,7 +336,7 @@
         heading = event.alpha;
       }
       if (heading == null) return;
-      userArrowRotation = -heading;
+      userArrowRotation = heading;
       if (userMarker) {
         const icon = userMarker.getIcon();
         icon.rotation = userArrowRotation;
