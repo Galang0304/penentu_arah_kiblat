@@ -1,0 +1,117 @@
+body {
+  font-family: 'Cairo', sans-serif;
+  background: linear-gradient(135deg, #e8f5e9 0%, #fffde7 100%);
+  min-height: 100vh;
+  margin: 0;
+  text-align: center;
+  padding: 0;
+}
+.card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(34, 139, 34, 0.10), 0 1.5px 6px rgba(212, 175, 55, 0.08);
+  max-width: 400px;
+  margin: 40px auto 0 auto;
+  padding: 32px 24px 32px 24px;
+  position: relative;
+}
+.header-ornament {
+  font-size: 32px;
+  color: #388e3c;
+  margin-bottom: 8px;
+}
+h1 {
+  color: #388e3c;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+p {
+  color: #666;
+  margin-bottom: 24px;
+}
+#kiblat {
+  font-size: 1.3rem;
+  margin-top: 18px;
+  color: #d4af37;
+  font-weight: 700;
+}
+#koordinat {
+  color: #388e3c;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+button {
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  background: linear-gradient(90deg, #388e3c 60%, #d4af37 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(56, 142, 60, 0.12);
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+button:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(56, 142, 60, 0.18);
+}
+#loading {
+  color: #388e3c;
+  font-weight: 600;
+}
+#kompas-container {
+  margin: 32px auto 0 auto;
+  width: 220px;
+  height: 220px;
+  background: #f9fbe7;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(56, 142, 60, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s;
+}
+#kompas {
+  width: 200px;
+  height: 200px;
+}
+#arrow {
+  filter: drop-shadow(0 2px 4px #d4af37aa);
+  transition: all 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+}
+@media (max-width: 500px) {
+  .card {
+    max-width: 98vw;
+    padding: 18px 4vw 18px 4vw;
+  }
+  #kompas-container {
+    width: 98vw;
+    height: 98vw;
+    max-width: 220px;
+    max-height: 220px;
+  }
+}
+#map {
+  width: 100%;
+  height: 350px;
+  max-width: 400px;
+  margin: 24px auto 0 auto;
+  display: none;
+  border-radius: 16px;
+  overflow: hidden;
+}
+#status-izin-lokasi, #status-izin-kompas {
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+}
+#kalibrasi-instruksi {
+  color: #d32f2f;
+  font-weight: 600;
+  margin-top: 12px;
+  max-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
+} 

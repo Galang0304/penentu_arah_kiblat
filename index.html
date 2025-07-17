@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arah Kiblat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23388e3c'/><text x='50' y='65' font-size='60' text-anchor='middle' fill='white'>🕋</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #fffde7 100%);
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(34, 139, 34, 0.10), 0 1.5px 6px rgba(212, 175, 55, 0.08);
+      max-width: 400px;
+      margin: 40px auto 0 auto;
+      padding: 32px 24px 32px 24px;
+      position: relative;
+    }
+    .header-ornament {
+      font-size: 32px;
+      color: #388e3c;
+      margin-bottom: 8px;
+    }
+    h1 {
+      color: #388e3c;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 24px;
+    }
+    #kiblat {
+      font-size: 1.3rem;
+      margin-top: 18px;
+      color: #d4af37;
+      font-weight: 700;
+    }
+    #koordinat {
+      color: #388e3c;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 12px 32px;
+      font-size: 1.1rem;
+      background: linear-gradient(90deg, #388e3c 60%, #d4af37 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(56, 142, 60, 0.12);
+      cursor: pointer;
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    button:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 16px rgba(56, 142, 60, 0.18);
+    }
+    #loading {
+      color: #388e3c;
+      font-weight: 600;
+    }
+    #kompas-container {
+      margin: 32px auto 0 auto;
+      width: 220px;
+      height: 220px;
+      background: #f9fbe7;
+      border-radius: 50%;
+      box-shadow: 0 2px 12px rgba(56, 142, 60, 0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.2s;
+    }
+    #kompas {
+      width: 200px;
+      height: 200px;
+    }
+    #arrow {
+      filter: drop-shadow(0 2px 4px #d4af37aa);
+      transition: all 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+    }
+    @media (max-width: 500px) {
+      .card {
+        max-width: 98vw;
+        padding: 18px 4vw 18px 4vw;
+      }
+      #kompas-container {
+        width: 98vw;
+        height: 98vw;
+        max-width: 220px;
+        max-height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header-ornament">&#x1F54B;</div>
+    <h1>Penentu Arah Kiblat</h1>
+    <h1>Final Tugas AIK Andi Arya Galang</h1>
+    <p>Tekan tombol di bawah untuk menentukan arah kiblat berdasarkan lokasi Anda.</p>
+    <button onclick="getLocation()" id="btnKiblat">Tentukan Arah Kiblat</button>
+    <div id="loading" style="display:none; margin-top:15px;">Mengambil lokasi...</div>
+    <div id="koordinat"></div>
+    <div id="kiblat"></div>
+    <div id="map" style="width:100%;height:350px;max-width:400px;margin:24px auto 0 auto;display:none;border-radius:16px;overflow:hidden;"></div>
+    <div id="kompas-container" style="display:none;">
+      <svg id="kompas" width="200" height="200">
+        <circle cx="100" cy="100" r="90" stroke="#388e3c" stroke-width="4" fill="#fffde7" />
+        <text x="100" y="30" text-anchor="middle" font-size="18" fill="#388e3c">N</text>
+        <text x="100" y="190" text-anchor="middle" font-size="18" fill="#388e3c">S</text>
+        <text x="170" y="110" text-anchor="middle" font-size="18" fill="#388e3c">E</text>
+        <text x="30" y="110" text-anchor="middle" font-size="18" fill="#388e3c">W</text>
+        <g id="arrow-group-kiblat">
+          <polygon id="arrow-kiblat" points="100,40 110,100 100,90 90,100" fill="#d4af37" />
+        </g>
+        <g id="arrow-group-user">
+          <polygon id="arrow-user" points="100,40 105,100 100,90 95,100" fill="#d32f2f" opacity="0.8" />
+        </g>
+      </svg>
+    </div>
+    <div id="kompas-instruksi" style="display:none; color:#388e3c; font-weight:600; margin-top:10px;">Putar HP Anda hingga kedua jarum bertumpuk untuk menghadap kiblat.</div>
+    <button id="btn-kompas-izin" style="display:none; margin-top:12px; padding:10px 24px; font-size:1rem; background:#d4af37; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Aktifkan Kompas</button>
+    <div id="kompas-status" style="margin-top:8px; color:#888; font-size:0.98rem;"></div>
+    <button id="btn-kalibrasi" style="display:block; margin:18px auto 0 auto; padding:10px 24px; font-size:1rem; background:#388e3c; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Kalibrasi Kompas</button>
+    <div id="kalibrasi-instruksi" style="display:none; color:#d32f2f; font-weight:600; margin-top:12px; max-width:350px; margin-left:auto; margin-right:auto;">Untuk kalibrasi kompas, gerakkan HP Anda membentuk angka 8 di udara beberapa kali. Jauhkan dari benda logam/elektronik besar.</div>
+    <div id="status-izin-lokasi" style="margin-bottom:10px; font-size:1.05rem;"></div>
+    <div id="status-izin-kompas" style="margin-bottom:10px; font-size:1.05rem;"></div>
+  </div>
+
+  <script>
+    let userMarker = null;
+    let userArrowRotation = 0;
+    let mapInstance = null;
+    function getLocation() {
+      document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#888;">⏳ Meminta izin lokasi...</span>';
+      document.getElementById("loading").style.display = "block";
+      document.getElementById("kiblat").innerHTML = "";
+      document.getElementById("koordinat").innerHTML = "";
+      document.getElementById("map").style.display = "none";
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showKiblat, showError);
+      } else {
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("kiblat").innerHTML = "Geolocation tidak didukung browser Anda.";
+        document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#d32f2f;">❌ Geolocation tidak didukung browser Anda.</span>';
+      }
+    }
+
+    function showKiblat(position) {
+      document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#388e3c;">✔️ Izin lokasi diberikan.</span>';
+      document.getElementById("loading").style.display = "none";
+      const userLat = position.coords.latitude;
+      const userLng = position.coords.longitude;
+      document.getElementById("koordinat").innerHTML = `Koordinat Anda: <strong>${userLat.toFixed(5)}, ${userLng.toFixed(5)}</strong>`;
+
+      const kaabaLat = 21.4225;
+      const kaabaLng = 39.8262;
+
+      const dLon = (kaabaLng - userLng) * Math.PI / 180;
+      const lat1 = userLat * Math.PI / 180;
+      const lat2 = kaabaLat * Math.PI / 180;
+
+      const y = Math.sin(dLon) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) -
+                Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      let brng = Math.atan2(y, x);
+      brng = brng * 180 / Math.PI;
+      brng = (brng + 360) % 360;
+
+      document.getElementById("kiblat").innerHTML = `Arah kiblat dari lokasi Anda adalah <strong>${brng.toFixed(2)}°</strong> dari Utara.`;
+      showMap(userLat, userLng, kaabaLat, kaabaLng);
+      enableUserArrowOnMap();
+    }
+
+    function showMap(userLat, userLng, kaabaLat, kaabaLng) {
+      document.getElementById("map").style.display = "block";
+      // Tunggu Google Maps API siap
+      if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+        document.getElementById("map").innerHTML = '<div style="color:#d32f2f;padding:20px;">Google Maps gagal dimuat. Pastikan API key sudah benar.</div>';
+        return;
+      }
+      const userPos = { lat: userLat, lng: userLng };
+      const kaabaPos = { lat: kaabaLat, lng: kaabaLng };
+      mapInstance = new google.maps.Map(document.getElementById("map"), {
+        zoom: 14,
+        center: userPos,
+        mapTypeId: 'roadmap',
+        streetViewControl: false,
+        fullscreenControl: false
+      });
+      // Marker user (arrow)
+      const arrowSvg = {
+        path: "M0,-30 L10,10 L0,5 L-10,10 Z",
+        fillColor: "#388e3c",
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+        rotation: userArrowRotation,
+        scale: 1.5,
+        anchor: new google.maps.Point(0, 10)
+      };
+      if (userMarker) userMarker.setMap(null);
+      userMarker = new google.maps.Marker({
+        position: userPos,
+        map: mapInstance,
+        title: "Lokasi & Arah Anda",
+        icon: arrowSvg
+      });
+      // Marker Ka'bah
+      new google.maps.Marker({
+        position: kaabaPos,
+        map: mapInstance,
+        title: "Ka'bah",
+        icon: {
+          url: 'https://upload.wikimedia.org/wikipedia/commons/6/6b/Kaaba_icon.png',
+          scaledSize: new google.maps.Size(32,32)
+        }
+      });
+      // Garis arah kiblat
+      new google.maps.Polyline({
+        path: [userPos, kaabaPos],
+        geodesic: true,
+        strokeColor: '#d4af37',
+        strokeOpacity: 0.9,
+        strokeWeight: 4,
+        map: mapInstance
+      });
+    }
+
+    function rotateKiblatArrow(brng) {
+      const arrowGroupKiblat = document.getElementById("arrow-group-kiblat");
+      arrowGroupKiblat.setAttribute("transform", `rotate(${brng}, 100, 100)`);
+    }
+
+    function enableUserCompass() {
+      const btnIzin = document.getElementById("btn-kompas-izin");
+      btnIzin.style.display = "none";
+      document.getElementById("kompas-status").innerText = "";
+      document.getElementById("status-izin-kompas").innerHTML = '';
+      if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS/Safari butuh izin eksplisit
+        btnIzin.style.display = "inline-block";
+        btnIzin.onclick = function() {
+          DeviceOrientationEvent.requestPermission().then(function(response) {
+            if (response === 'granted') {
+              window.addEventListener('deviceorientation', handleOrientation, true);
+              document.getElementById("kompas-status").innerText = "Kompas aktif.";
+              btnIzin.style.display = "none";
+              document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#388e3c;">✔️ Izin kompas diberikan.</span>';
+            } else {
+              document.getElementById("kompas-status").innerText = "Izin kompas ditolak.";
+              document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Izin kompas ditolak.</span>';
+            }
+          }).catch(function() {
+            document.getElementById("kompas-status").innerText = "Gagal meminta izin kompas.";
+            document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Gagal meminta izin kompas.</span>';
+          });
+        };
+        document.getElementById("kompas-status").innerText = "Tekan tombol di atas untuk mengaktifkan kompas.";
+        document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#888;">⏳ Menunggu izin kompas...</span>';
+      } else if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+        window.addEventListener('deviceorientation', handleOrientation, true);
+        document.getElementById("kompas-status").innerText = "Kompas aktif.";
+        document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#388e3c;">✔️ Kompas aktif.</span>';
+      } else {
+        document.getElementById("kompas-instruksi").innerText = "Sensor kompas tidak didukung di perangkat ini.";
+        document.getElementById("kompas-status").innerText = "Sensor kompas tidak tersedia.";
+        document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Sensor kompas tidak tersedia.</span>';
+      }
+    }
+
+    function handleOrientation(event) {
+      let alpha = event.alpha;
+      // Untuk beberapa browser, alpha sudah mengarah ke utara sebenarnya (absolute), untuk lain perlu koreksi
+      if (typeof event.webkitCompassHeading !== "undefined") {
+        alpha = event.webkitCompassHeading; // iOS Safari
+      }
+      if (alpha == null) return;
+      // Rotasi jarum user: 0 derajat = utara
+      rotateUserArrow(alpha);
+    }
+
+    function rotateUserArrow(deg) {
+      const arrowGroupUser = document.getElementById("arrow-group-user");
+      arrowGroupUser.setAttribute("transform", `rotate(${-deg}, 100, 100)`);
+    }
+
+    function showError(error) {
+      document.getElementById("loading").style.display = "none";
+      let msg = "";
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          msg = "Izin lokasi ditolak.";
+          document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#d32f2f;">❌ Izin lokasi ditolak.</span>';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          msg = "Lokasi tidak tersedia.";
+          document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#d32f2f;">❌ Lokasi tidak tersedia.</span>';
+          break;
+        case error.TIMEOUT:
+          msg = "Permintaan lokasi terlalu lama.";
+          document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#d32f2f;">❌ Permintaan lokasi terlalu lama.</span>';
+          break;
+        case error.UNKNOWN_ERROR:
+          msg = "Terjadi kesalahan tidak diketahui.";
+          document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#d32f2f;">❌ Terjadi kesalahan tidak diketahui.</span>';
+          break;
+      }
+      document.getElementById("kiblat").innerHTML = msg;
+      document.getElementById("map").style.display = "none";
+      document.getElementById("kompas-instruksi").style.display = "none";
+      document.getElementById("kompas-status").innerText = "";
+      document.getElementById("btn-kompas-izin").style.display = "none";
+    }
+
+    function enableUserArrowOnMap() {
+      if (window.DeviceOrientationEvent) {
+        window.addEventListener('deviceorientationabsolute', updateUserArrowRotation, true);
+        window.addEventListener('deviceorientation', updateUserArrowRotation, true);
+      }
+    }
+
+    function updateUserArrowRotation(event) {
+      let heading;
+      if (typeof event.webkitCompassHeading !== 'undefined') {
+        heading = event.webkitCompassHeading;
+        // Koreksi untuk landscape (iOS Safari)
+        if (window.orientation === 90) {
+          heading = heading - 90;
+        } else if (window.orientation === -90) {
+          heading = heading + 90;
+        }
+      } else {
+        heading = event.alpha;
+      }
+      if (heading == null) return;
+      userArrowRotation = -heading;
+      if (userMarker) {
+        const icon = userMarker.getIcon();
+        icon.rotation = userArrowRotation;
+        userMarker.setIcon(icon);
+      }
+      // Instruksi kalibrasi jika hasil melenceng
+      if (typeof event.webkitCompassHeading !== 'undefined' && Math.abs(userArrowRotation) < 1) {
+        document.getElementById("kompas-status").innerText = "Jika arah panah tidak sesuai, silakan kalibrasi kompas HP Anda (gerakkan membentuk angka 8 di udara).";
+        document.getElementById("kalibrasi-instruksi").style.display = "block";
+        setTimeout(() => {
+          document.getElementById("kalibrasi-instruksi").style.display = "none";
+        }, 8000);
+      }
+    }
+  </script>
+  <!-- Tambahkan script Google Maps API di bawah ini, ganti YOUR_API_KEY dengan API key Anda -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAOVYRIgupAurZup5y1PRh8Ismb1A3lLao&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
