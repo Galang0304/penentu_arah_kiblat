@@ -117,6 +117,8 @@
     <div id="kiblat"></div>
     <div id="map" style="width:100%;height:350px;max-width:400px;margin:24px auto 0 auto;display:none;border-radius:16px;overflow:hidden;"></div>
     <!-- Kompas mini dan tombol kalibrasi dihapus sesuai permintaan -->
+    <button id="btn-izin-lokasi" style="display:block; margin:10px auto 0 auto; padding:10px 24px; font-size:1rem; background:#388e3c; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Izinkan Lokasi</button>
+    <button id="btn-izin-kompas" style="display:block; margin:10px auto 0 auto; padding:10px 24px; font-size:1rem; background:#d4af37; color:#fff; border:none; border-radius:7px; font-family:'Cairo',sans-serif; font-weight:700;">Izinkan Kompas</button>
     <div id="status-izin-lokasi" style="margin-bottom:10px; font-size:1.05rem;"></div>
     <div id="status-izin-kompas" style="margin-bottom:10px; font-size:1.05rem;"></div>
   </div>
@@ -125,9 +127,14 @@
     let userMarker = null;
     let userArrowRotation = 0;
     let mapInstance = null;
-    // Aktifkan kompas otomatis saat halaman dimuat
+    // Event listener tombol izin lokasi dan kompas
     document.addEventListener('DOMContentLoaded', function() {
-      enableUserCompass();
+      document.getElementById('btn-izin-lokasi').onclick = function() {
+        getLocation();
+      };
+      document.getElementById('btn-izin-kompas').onclick = function() {
+        enableUserCompass();
+      };
     });
     function getLocation() {
       document.getElementById("status-izin-lokasi").innerHTML = '<span style="color:#888;">⏳ Meminta izin lokasi...</span>';
@@ -231,54 +238,49 @@
     }
 
     function enableUserCompass() {
-      const btnIzin = document.getElementById("btn-kompas-izin");
-      btnIzin.style.display = "none";
-      document.getElementById("kompas-status").innerText = "";
-      document.getElementById("status-izin-kompas").innerHTML = '';
-      // Tampilkan kompas-container saat kompas aktif/izin diminta
-      document.getElementById("kompas-container").style.display = "block";
+      // Hilangkan referensi ke kompas mini
       if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
         // iOS/Safari butuh izin eksplisit
-        btnIzin.style.display = "inline-block";
-        btnIzin.onclick = function() {
-          DeviceOrientationEvent.requestPermission().then(function(response) {
-            if (response === 'granted') {
-              window.addEventListener('deviceorientation', handleOrientation, true);
-              document.getElementById("kompas-status").innerText = "Kompas aktif.";
-              btnIzin.style.display = "none";
-              document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#388e3c;">✔️ Izin kompas diberikan.</span>';
-            } else {
-              document.getElementById("kompas-status").innerText = "Izin kompas ditolak.";
-              document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Izin kompas ditolak.</span>';
-            }
-          }).catch(function() {
-            document.getElementById("kompas-status").innerText = "Gagal meminta izin kompas.";
-            document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Gagal meminta izin kompas.</span>';
-          });
-        };
+        DeviceOrientationEvent.requestPermission().then(function(response) {
+          if (response === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+            window.addEventListener('deviceorientation', updateUserArrowRotation, true);
+            document.getElementById("kompas-status").innerText = "Kompas aktif.";
+            document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#388e3c;">✔️ Izin kompas diberikan.</span>';
+          } else {
+            document.getElementById("kompas-status").innerText = "Izin kompas ditolak.";
+            document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Izin kompas ditolak.</span>';
+          }
+        }).catch(function() {
+          document.getElementById("kompas-status").innerText = "Gagal meminta izin kompas.";
+          document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Gagal meminta izin kompas.</span>';
+        });
         document.getElementById("kompas-status").innerText = "Tekan tombol di atas untuk mengaktifkan kompas.";
         document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#888;">⏳ Menunggu izin kompas...</span>';
       } else if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+        window.addEventListener('deviceorientationabsolute', updateUserArrowRotation, true);
         window.addEventListener('deviceorientation', handleOrientation, true);
+        window.addEventListener('deviceorientation', updateUserArrowRotation, true);
         document.getElementById("kompas-status").innerText = "Kompas aktif.";
         document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#388e3c;">✔️ Kompas aktif.</span>';
       } else {
-        document.getElementById("kompas-instruksi").innerText = "Sensor kompas tidak didukung di perangkat ini.";
         document.getElementById("kompas-status").innerText = "Sensor kompas tidak tersedia.";
         document.getElementById("status-izin-kompas").innerHTML = '<span style="color:#d32f2f;">❌ Sensor kompas tidak tersedia.</span>';
       }
     }
 
     function handleOrientation(event) {
-      let alpha = event.alpha;
-      // Untuk beberapa browser, alpha sudah mengarah ke utara sebenarnya (absolute), untuk lain perlu koreksi
+      let deg;
       if (typeof event.webkitCompassHeading !== "undefined") {
-        alpha = event.webkitCompassHeading; // iOS Safari
+        // iOS Safari: sudah searah jarum jam
+        deg = event.webkitCompassHeading;
+      } else {
+        // Android/Chrome: alpha berlawanan arah jarum jam
+        deg = -event.alpha;
       }
-      if (alpha == null) return;
-      // Rotasi jarum user: 0 derajat = utara
-      rotateUserArrow(alpha);
+      if (deg == null) return;
+      rotateUserArrow(deg);
     }
 
     function rotateUserArrow(deg) {
@@ -333,7 +335,7 @@
           heading = heading + 90;
         }
       } else {
-        heading = event.alpha;
+        heading = -event.alpha;
       }
       if (heading == null) return;
       userArrowRotation = heading;
@@ -342,7 +344,7 @@
         icon.rotation = userArrowRotation;
         userMarker.setIcon(icon);
       }
-      // Instruksi kalibrasi jika hasil melenceng
+      // Instruksi kalibrasi jika hasil melenceng (khusus iOS)
       if (typeof event.webkitCompassHeading !== 'undefined' && Math.abs(userArrowRotation) < 1) {
         document.getElementById("kompas-status").innerText = "Jika arah panah tidak sesuai, silakan kalibrasi kompas HP Anda (gerakkan membentuk angka 8 di udara).";
         document.getElementById("kalibrasi-instruksi").style.display = "block";
